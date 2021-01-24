@@ -4,6 +4,7 @@
 
 #include "ST7066.h"
 
+//=============================================================================
 void initLcd()
 {
     lcdSendNibble(0x03);
@@ -20,16 +21,15 @@ void initLcd()
     lcdSendByte(LCD_COMMAND_CLEAR_DISPLAY, BYTE_TYPE_COMMAND);
     lcdSendByte(LCD_COMMAND_DISPLAY_ENABLE, BYTE_TYPE_COMMAND);
 }
-
+//=============================================================================
 void lcdWriteString(char *string)
 {
     while ((string != 0) && (*string != '\0'))
     {
-        lcdSendByte(*string, BYTE_TYPE_DATA);
-        string++;
+        lcdSendByte(*string++, BYTE_TYPE_DATA);
     }
 }
-
+//=============================================================================
 void lcdSendNibble(uint8_t nibbleToSend)
 {
     // Clear data on LCD data bus
@@ -41,7 +41,7 @@ void lcdSendNibble(uint8_t nibbleToSend)
     // Set LCD pin E and clear
     lcdPulseEnablePin();
 }
-
+//=============================================================================
 void lcdSendByte(uint8_t byteToSend, uint8_t byteType)
 {
     waitBusyFlag();
@@ -60,7 +60,7 @@ void lcdSendByte(uint8_t byteToSend, uint8_t byteType)
     // Send Low Nibble
     lcdSendNibble( byteToSend & 0x0F );
 }
-
+//=============================================================================
 void waitBusyFlag()
 {
     // Clear data on bus
@@ -83,7 +83,7 @@ void waitBusyFlag()
     // Set write mode
     LCD_CTRL_PORT &= ~(LCD_RW_PIN);
 }    
-
+//=============================================================================
 void lcdPulseEnablePin()
 {
     LCD_CTRL_PORT &= ~LCD_E_PIN;
@@ -94,4 +94,52 @@ void lcdPulseEnablePin()
     
     LCD_CTRL_PORT &= ~LCD_E_PIN;
     _delay_ms(10);
+}
+//=============================================================================
+void uintToBcd(uint16_t number, char *bcdStringPtr)
+{
+    uint16_t multiplier[] = UINT_BCD_MULTIPLIERS;
+    char *highDigitPtr = bcdStringPtr;
+    uint8_t decPlace = 0;   // 0 - Highest digit of number
+    uint8_t digit    = 0;   // Every decimal place start  position 
+    
+    while (decPlace < UINT_STRING_BUFF_LEN - 1)
+    {
+        digit = 0;
+        while (number >= multiplier[decPlace])
+        {
+            number -= multiplier[decPlace];
+            digit++;
+        }
+    
+        // If digit is zero when it is first position on bcd buffer - stay on current position
+        if (!((bcdStringPtr == highDigitPtr) && (digit == 0)))
+        {
+            *bcdStringPtr = digit + '0';
+            bcdStringPtr++;
+        }
+        
+        decPlace++;
+    }
+    
+    // If number is zero - display zero
+    if ((highDigitPtr == bcdStringPtr) && (digit == 0))
+    {
+        *bcdStringPtr = '0';
+        bcdStringPtr++;
+    }
+    
+    *bcdStringPtr = '\0';
+}
+//=============================================================================
+// Write string on LCD from flash ROM
+//=============================================================================
+void lcdWriteString_P(PGM_P pgm_string)
+{
+    char symb = pgm_read_byte(pgm_string);
+    while (symb != '\0')
+    {
+        lcdSendByte(symb, BYTE_TYPE_DATA);
+        symb = (char) pgm_read_byte(++pgm_string);
+    }
 }

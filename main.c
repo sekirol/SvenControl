@@ -8,50 +8,38 @@
 #include "main.h"
 #include "init.h"
 #include "ST7066.h"
+#include "diplay.h"
+#include "control.h"
 
-struct
+typedef struct
 {
     uint8_t selChan, frVol, ctrVol, bckVol, subVol;
 } settings;
 
-volatile uint8_t pressedButton = 0;
+volatile uint8_t needUpdate;
 
 int main(void)
-{    
+{
+    
     initGpio();
     initLcd();
-    
-    initIRQ0();
-    TIMSK |= 1<<TOIE0;            // Timer0 overflow interrupt enable
-    
-    sei();
+    //initIRQ0();
+    //TIMSK |= 1<<TOIE0;            // Timer0 overflow interrupt enable
+    //sei();
     
     lcdWriteString("Nothing");
     
+    //needUpdate = 1;
+
+    uint16_t i = 0;
+    
     while(1)
-    {      
-        if (pressedButton)
-        {
-            LCD_CLEAR_DISPLAY;
-            
-            switch (pressedButton)
-            {
-            case 1:
-                 lcdWriteString("First");
-                 break;
-            case 2:
-                 lcdWriteString("Second");
-                 break;
-            case 3:
-                 lcdWriteString("Third");
-                 break;
-            case 4:
-                 lcdWriteString("Fourth");
-                 break;
-            }
+    {
+
+        displayDataUpdate();
+        i++;
         
-            pressedButton = 0;
-        }
+        _delay_ms(500);    
     }
 }
 
@@ -63,27 +51,35 @@ ISR(INT0_vect)
     TCNT0 = 0;                      // Set timer value
     TCCR0 |= (1<<CS02 | 1<<CS00);   // Start timer - prescaler 1024
     
-    // Which button is pressed
-    switch (~(BUTTONS_PIN) &  BUTTON_PIN_MASK)
-    {
-    case BTN1_PIN:
-        pressedButton = 1;
-        break;
-    case BTN2_PIN:
-        pressedButton = 2;
-        break;
-    case BTN3_PIN:
-        pressedButton = 3;
-        break;
-    case BTN4_PIN:
-        pressedButton = 4;
-        break;
-    }
+    //if (pressedButton)
+    //{
+        //pressedButton = 0;
+    //}        
+    //else
+    //{
+        //// Which button is pressed
+        //switch (~(BUTTONS_PIN) &  BUTTON_PIN_MASK)
+        //{
+            //case BTN1_PIN:
+            //pressedButton = 1;
+            //break;
+            //case BTN2_PIN:
+            //pressedButton = 2;
+            //break;
+            //case BTN3_PIN:
+            //pressedButton = 3;
+            //break;
+            //case BTN4_PIN:
+            //pressedButton = 4;
+            //break;
+        //}        
+    //}
 }
 
 ISR(TIMER0_OVF_vect)
 {    
     TCCR0 &= ~(1<<CS02 | 1<<CS01 | 1<<CS00);   // Stop debounce timer
-    GIFR |= (1<<INTF0);                        // Clear External Interrupt Request 0 flag
-    GICR |= (1<<INT0);                         // External Interrupt Request 0 Enable
+    MCUCR |= (1<<ISC01| 1<<ISC00);             // The rising edge of INT0 generates an interrupt request
+    GIFR  |= (1<<INTF0);                       // Clear External Interrupt Request 0 flag
+    GICR  |= (1<<INT0);                        // External Interrupt Request 0 Enable
 }

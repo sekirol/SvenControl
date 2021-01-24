@@ -2,6 +2,8 @@
 #define ST7066_H_
 
 #include <avr/io.h>
+#include <avr/pgmspace.h>
+
 
 // -- GPIO description ----------------------------------------------------------------------------
 
@@ -41,16 +43,20 @@
 #define BYTE_TYPE_COMMAND 0
 #define BYTE_TYPE_DATA 1
 
-#define LCD_COMMAND_DISPLAY_FORMAT  0x22  // 4-bit bus mode; Font size - 5x8; Display line number - 2-line mode
+#define LCD_COMMAND_DISPLAY_FORMAT  0x28  // 4-bit bus mode; Font size - 5x8; Display line number - 2-line mode
 #define LCD_COMMAND_DISPLAY_ENTRYM  0x06  // Cursor moves to right
 #define LCD_COMMAND_DISPLAY_ENABLE  0x0E  // Cursor - ON; Cursor blinking - OFF
 #define LCD_COMMAND_DISPLAY_DISABLE 0x08
 #define LCD_COMMAND_CLEAR_DISPLAY   0x01
 #define LCD_COMMAND_RETURN_HOME     0x02
+#define LCD_COMMAND_GOTO_2_LINE     0xC0
 
 #define LCD_CLEAR_DISPLAY   lcdSendByte(LCD_COMMAND_CLEAR_DISPLAY, BYTE_TYPE_COMMAND)
+#define LCD_RETURN_HOME     lcdSendByte(LCD_COMMAND_RETURN_HOME, BYTE_TYPE_COMMAND)
+#define LCD_GOTO_2_LINE     lcdSendByte(LCD_COMMAND_GOTO_2_LINE, BYTE_TYPE_COMMAND)
 
-#define UINT_DIGITS_NUM 5
+#define UINT_BCD_MULTIPLIERS {10000, 1000, 100, 10, 1}
+#define UINT_STRING_BUFF_LEN 6  // For max of unsigned int value (65535) and end of file symbol
 
 void initLcd();
 void lcdPulseEnablePin();
@@ -59,5 +65,6 @@ void lcdSendByte(uint8_t byteToSend, uint8_t byteType);
 void lcdWriteString(char *string);
 void waitBusyFlag();
 void uintToBcd(uint16_t number, char *bcdString);
+void lcdWriteString_P(PGM_P pgm_string);
 
 #endif /* ST7066_H_ */
