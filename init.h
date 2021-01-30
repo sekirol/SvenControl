@@ -21,6 +21,6 @@
 #define BUTTON_PIN_MASK (BTN1_PIN | BTN2_PIN | BTN3_PIN | BTN4_PIN)
 
 void initGpio();
-void initIRQ0();
+void initInterrupts();
 
 #endif /* INIT_H_ */

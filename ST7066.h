@@ -45,15 +45,22 @@
 
 #define LCD_COMMAND_DISPLAY_FORMAT  0x28  // 4-bit bus mode; Font size - 5x8; Display line number - 2-line mode
 #define LCD_COMMAND_DISPLAY_ENTRYM  0x06  // Cursor moves to right
-#define LCD_COMMAND_DISPLAY_ENABLE  0x0E  // Cursor - ON; Cursor blinking - OFF
+
+//#define LCD_COMMAND_DISPLAY_ENABLE  0x0C  // Cursor - OFF; Cursor blinking - OFF
+#define LCD_COMMAND_DISPLAY_ENABLE  0x0F
+
 #define LCD_COMMAND_DISPLAY_DISABLE 0x08
 #define LCD_COMMAND_CLEAR_DISPLAY   0x01
 #define LCD_COMMAND_RETURN_HOME     0x02
-#define LCD_COMMAND_GOTO_2_LINE     0xC0
+#define LCD_COMMAND_SET_CURSOR      0x80
 
-#define LCD_CLEAR_DISPLAY   lcdSendByte(LCD_COMMAND_CLEAR_DISPLAY, BYTE_TYPE_COMMAND)
-#define LCD_RETURN_HOME     lcdSendByte(LCD_COMMAND_RETURN_HOME, BYTE_TYPE_COMMAND)
-#define LCD_GOTO_2_LINE     lcdSendByte(LCD_COMMAND_GOTO_2_LINE, BYTE_TYPE_COMMAND)
+#define LCD_LINE_LENGTH 20      // Number of symbols in one string
+#define LCD_FIRST_LINE  0x00    // Start first line DDRAM address
+#define LCD_SECOND_LINE 0x40    // Start second line DDRAM address
+
+#define LCD_CLEAR_DISPLAY           lcdSendByte(LCD_COMMAND_CLEAR_DISPLAY, BYTE_TYPE_COMMAND)
+#define LCD_RETURN_HOME             lcdSendByte(LCD_COMMAND_RETURN_HOME, BYTE_TYPE_COMMAND)
+#define LCD_SET_CURSOR(pos, line)   lcdSendByte(LCD_COMMAND_SET_CURSOR | line | pos, BYTE_TYPE_COMMAND)
 
 #define UINT_BCD_MULTIPLIERS {10000, 1000, 100, 10, 1}
 #define UINT_STRING_BUFF_LEN 6  // For max of unsigned int value (65535) and end of file symbol
@@ -64,7 +71,9 @@ void lcdSendNibble(uint8_t nibbleToSend);
 void lcdSendByte(uint8_t byteToSend, uint8_t byteType);
 void lcdWriteString(char *string);
 void waitBusyFlag();
-void uintToBcd(uint16_t number, char *bcdString);
+void lcdClearArea(uint8_t dispLine, uint8_t fromPos, uint8_t toPos);
+void uintToBcd(uint16_t number, char *bcdStringPtr);
+void lcdReplaceData(char *oldData, char *newData, uint8_t line);
 void lcdWriteString_P(PGM_P pgm_string);
 
 #endif /* ST7066_H_ */

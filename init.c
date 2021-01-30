@@ -20,8 +20,13 @@ void initGpio()
     BUTTONS_DDR &= ~INPUT_PIN_MASK;
 }
 
-void initIRQ0()
+void initInterrupts()
 {
+    GIFR  |= (1<<INTF0);    // Clear External Interrupt Request 0 flag
+    TIFR  |= (1<<TOV0);     // Clear Timer0 overflow interrupt flag
+    
     MCUCR |= (1<<ISC01);    // The falling edge of INT0 generates an interrupt request.
     GICR  |= (1<<INT0);     // External Interrupt Request 0 Enable
+    
+    TIMSK |= 1<<TOIE0;      // Timer0 overflow interrupt enable
 }

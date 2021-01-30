@@ -1,6 +1,7 @@
 
 #define F_CPU 8000000UL
 #include <util/delay.h>
+#include <string.h>
 
 #include "ST7066.h"
 
@@ -130,6 +131,34 @@ void uintToBcd(uint16_t number, char *bcdStringPtr)
     }
     
     *bcdStringPtr = '\0';
+}
+//=============================================================================
+//
+//=============================================================================
+void lcdReplaceData(char *oldData, char *newData, uint8_t line)
+{
+    uint8_t i;
+ 
+    size_t oldDataLen = strlen(oldData);   
+    
+    for (i = 0; newData[i] != '\0'; i++)
+    {
+        if ( (i > oldDataLen) || (oldData[i] != newData[i]) )
+        {
+            LCD_SET_CURSOR(i, line);
+            lcdSendByte(newData[i], BYTE_TYPE_DATA);
+            oldData[i] = newData[i];
+        }
+    }
+    oldData[i] = '\0';
+    
+    while (i < oldDataLen)
+    {
+        LCD_SET_CURSOR(i, line);
+        lcdSendByte(' ', BYTE_TYPE_DATA);
+        i++;
+    }
+    
 }
 //=============================================================================
 // Write string on LCD from flash ROM
